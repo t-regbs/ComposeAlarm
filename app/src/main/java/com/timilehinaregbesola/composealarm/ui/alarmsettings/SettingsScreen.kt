@@ -1,27 +1,27 @@
 package com.timilehinaregbesola.composealarm.ui.alarmsettings
 
-import androidx.compose.foundation.Icon
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollableColumn
-import androidx.compose.foundation.Text
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.CoreTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.List
-import androidx.compose.runtime.*
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.ui.tooling.preview.Preview
+import com.timilehinaregbesola.composealarm.R
 import com.timilehinaregbesola.composealarm.database.Alarm
 import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
 import com.timilehinaregbesola.composealarm.utils.getFormatTime
@@ -98,6 +98,8 @@ fun SettingsScreen(alarm: Alarm) {
                         onCheckedChange = { checkedState.value = it }
                 )
             }
+//            ImageButton(modifier = Modifier.padding(bottom = 10.dp, top = 10.dp)
+//                    .align(Alignment.CenterHorizontally))
             Button(onClick = {}, modifier = Modifier
                             .padding(bottom = 10.dp, top = 10.dp)
                             .align(Alignment.CenterHorizontally)
@@ -127,7 +129,8 @@ private fun RowWithDropdown(title: String) {
         Text(modifier = Modifier.weight(3f), text = title, fontSize = 15.sp)
         val expanded = remember { mutableStateOf(false) }
         val iconButton = @Composable {
-            Button(backgroundColor = Color.White, onClick = { expanded.value = true }) {
+            Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+                onClick = { expanded.value = true }) {
                 Text("Press me")
             }
         }
@@ -153,20 +156,28 @@ private fun RowWithDropdown(title: String) {
 
 @Composable
 fun NumberTextInputComponent(modifier: Modifier = Modifier) {
-    var textValue by remember { mutableStateOf(TextFieldValue("")) }
-    TextField(value = textValue,
-            modifier = modifier.padding(end = 4.dp),
-            keyboardType = KeyboardType.Number,
-            onValueChange = {
-                textValue = it
-            }
+    val textValue = remember { mutableStateOf(TextFieldValue()) }
+    TextField(value = textValue.value,
+        modifier = modifier.padding(end = 4.dp),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
+        onValueChange = { textValue.value = it }
     )
+}
+
+@Composable
+fun ImageButton(modifier: Modifier = Modifier) {
+    Button(onClick = {}, modifier = modifier) {
+        Image(bitmap = imageResource(R.drawable.ic_bubble))
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun SettingsPreview() {
     ComposeAlarmTheme {
-        SettingsPreview()
+        SettingsScreen(Alarm())
+//        NumberTextInputComponent()
+//        ImageButton()
     }
 }

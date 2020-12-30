@@ -4,14 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import androidx.compose.runtime.livedata.observeAsState
 import com.timilehinaregbesola.composealarm.R
+import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
 import com.timilehinaregbesola.composealarm.utils.Screen
 import com.timilehinaregbesola.composealarm.utils.navigate
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AlarmListFragment : Fragment() {
     private val alarmListViewModel by viewModel<AlarmListViewModel>()
