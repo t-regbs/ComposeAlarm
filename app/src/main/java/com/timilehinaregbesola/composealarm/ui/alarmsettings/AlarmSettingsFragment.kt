@@ -4,6 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
@@ -12,6 +16,7 @@ import com.timilehinaregbesola.composealarm.R
 import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
 import com.timilehinaregbesola.composealarm.utils.Screen
 import com.timilehinaregbesola.composealarm.utils.navigate
+import com.timilehinaregbesola.composealarm.utils.pop
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AlarmSettingsFragment : Fragment() {
@@ -19,12 +24,26 @@ class AlarmSettingsFragment : Fragment() {
     private val args: AlarmSettingsFragmentArgs by navArgs()
     private var key: Long? = null
     private var isFromAdd: Boolean? = null
+    override fun <I : Any?, O : Any?> prepareCall(
+        contract: ActivityResultContract<I, O>,
+        callback: ActivityResultCallback<O>
+    ): ActivityResultLauncher<I> {
+        TODO("Not yet implemented")
+    }
+
+    override fun <I : Any?, O : Any?> prepareCall(
+        contract: ActivityResultContract<I, O>,
+        registry: ActivityResultRegistry,
+        callback: ActivityResultCallback<O>
+    ): ActivityResultLauncher<I> {
+        TODO("Not yet implemented")
+    }
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-    ): View? {
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         isFromAdd = args.add
         key = args.alarmKey
         alarmSettingsViewModel.navigateToAlarmMath.observe(viewLifecycleOwner) { navigateToEvent ->
@@ -32,19 +51,27 @@ class AlarmSettingsFragment : Fragment() {
                 navigate(Screen.AlarmSettings, Screen.AlarmList, id, null)
             }
         }
+        alarmSettingsViewModel.popFrag.observe(
+            viewLifecycleOwner,
+            {
+                if (it != null) {
+                    pop()
+                }
+            }
+        )
 
         return ComposeView(requireContext()).apply {
             // In order for savedState to work, the same ID needs to be used for all instances.
             id = R.id.alarmFragment
 
             layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
             setContent {
                 ComposeAlarmTheme {
                     alarmSettingsViewModel.alarm.observeAsState().value?.let { alarm ->
-                        SettingsScreen(alarm)
+                        SettingsScreen(alarm, alarmSettingsViewModel)
                     }
                 }
             }

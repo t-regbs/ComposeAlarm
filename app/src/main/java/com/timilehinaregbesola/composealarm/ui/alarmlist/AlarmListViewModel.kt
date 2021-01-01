@@ -11,7 +11,7 @@ import com.timilehinaregbesola.mathalarm.database.AlarmRepository
 import kotlinx.coroutines.launch
 import java.util.*
 
-class AlarmListViewModel(private val repository: AlarmRepository): ViewModel(){
+class AlarmListViewModel(private val repository: AlarmRepository) : ViewModel() {
     var addClicked = MutableLiveData<Boolean?>()
     private val _alarms = MutableLiveData<List<Alarm>>()
     val alarms: LiveData<List<Alarm>>
@@ -20,12 +20,11 @@ class AlarmListViewModel(private val repository: AlarmRepository): ViewModel(){
     private val _navigateToAlarmSettings = MutableLiveData<Event<Long>>()
     val navigateToAlarmSettings: LiveData<Event<Long>>
         get() = _navigateToAlarmSettings
-
 //    init {
 //        getAlarms()
 //    }
 
-    fun onUpdate(alarm: Alarm){
+    fun onUpdate(alarm: Alarm) {
         viewModelScope.launch {
             repository.update(alarm)
             getAlarms()
@@ -39,8 +38,8 @@ class AlarmListViewModel(private val repository: AlarmRepository): ViewModel(){
         }
     }
 
-    //Called when add menu is pressed
-    fun onAdd(){
+    // Called when add menu is pressed
+    fun onAdd() {
         val new = Alarm()
         val sb = StringBuilder("FFFFFFF")
         val cal = initCalendar(new)
@@ -55,7 +54,7 @@ class AlarmListViewModel(private val repository: AlarmRepository): ViewModel(){
         }
     }
 
-    private  fun initCalendar(alarm: Alarm): Calendar {
+    private fun initCalendar(alarm: Alarm): Calendar {
         val cal = Calendar.getInstance()
         cal[Calendar.HOUR_OF_DAY] = alarm.hour
         cal[Calendar.MINUTE] = alarm.minute
@@ -63,29 +62,26 @@ class AlarmListViewModel(private val repository: AlarmRepository): ViewModel(){
         return cal
     }
 
-    fun onDelete(alarm: Alarm){
+    fun onDelete(alarm: Alarm) {
         viewModelScope.launch {
             repository.delete(alarm)
             getAlarms()
         }
     }
 
-
-    fun onClear(){
+    fun onClear() {
         viewModelScope.launch {
             repository.clear()
             getAlarms()
         }
     }
 
-
-    fun onAlarmClicked(id: Long){
+    fun onAlarmClicked(id: Long) {
         addClicked.value = false
         _navigateToAlarmSettings.value = Event(id)
     }
 
-    fun onAlarmSettingsNavigated(){
+    fun onAlarmSettingsNavigated() {
         _navigateToAlarmSettings.value = null
     }
-
 }

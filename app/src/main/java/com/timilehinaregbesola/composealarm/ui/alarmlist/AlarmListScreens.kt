@@ -1,22 +1,20 @@
 package com.timilehinaregbesola.composealarm.ui.alarmlist
 
+import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Text
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
-import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AmbientContext
 import androidx.compose.ui.res.loadImageResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,6 +26,7 @@ import com.timilehinaregbesola.composealarm.ui.colorNightBlue
 import com.timilehinaregbesola.composealarm.ui.colorSkyBlue
 import com.timilehinaregbesola.composealarm.ui.goldColor
 import com.timilehinaregbesola.composealarm.utils.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun EmptyScreen(viewModel: AlarmListViewModel) {
@@ -35,22 +34,10 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Math Alarm") },
-                    actions = {
-                        IconButton(onClick = {  openDialog.value = true }) {
-                            Icon(imageVector = Icons.Filled.List)
-                        }
-                        IconButton(onClick = { viewModel.onAdd() }) {
-                            Icon(imageVector = Icons.Filled.Add)
-                        }
-                    }
-                )
+                ListTopAppBar(openDialog, viewModel)
             }
         ) {
-            if (openDialog.value) {
-                ClearDialog(openDialog)
-            }
+            if (openDialog.value) ClearDialog(openDialog)
 
             Column(
                 modifier = Modifier.fillMaxWidth().fillMaxHeight().background(color = Color.Black),
@@ -84,76 +71,115 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
 }
 
 @Composable
+private fun ListTopAppBar(
+    openDialog: MutableState<Boolean>,
+    viewModel: AlarmListViewModel
+) {
+    TopAppBar(
+        title = { Text("Math Alarm") },
+        actions = {
+            IconButton(onClick = { openDialog.value = true }) {
+                Icon(imageVector = Icons.Filled.List)
+            }
+            IconButton(onClick = { viewModel.onAdd() }) {
+                Icon(imageVector = Icons.Filled.Add)
+            }
+        }
+    )
+}
+
+@ExperimentalMaterialApi
+@Composable
 fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
     val openDialog = remember { mutableStateOf(false) }
+    val scaffoldState = rememberScaffoldState()
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-                topBar = {
-                    TopAppBar(
-                            title = { Text("Math Alarm") },
-                            actions = {
-                                IconButton(onClick = {  openDialog.value = true }) {
-                                    Icon(imageVector = Icons.Filled.List)
-                                }
-                                IconButton(onClick = { viewModel.onAdd() }) {
-                                    Icon(imageVector = Icons.Filled.Add)
-                                }
-                            }
+            scaffoldState = scaffoldState,
+            topBar = {
+                ListTopAppBar(openDialog = openDialog, viewModel = viewModel)
+            },
+            snackbarHost = { state -> TimeLeftSnack(state) }
+        ) {
+            if (openDialog.value) ClearDialog(openDialog)
+            LazyColumn(modifier = Modifier.fillMaxHeight().background(color = Color.Black)) {
+                items(list) { alarm ->
+                    AlarmItem(
+                        alarm = alarm,
+                        onClick = { viewModel.onAlarmClicked(alarm.alarmId) },
+                        onUpdateAlarm = viewModel::onUpdate,
+                        scaffoldState = scaffoldState
                     )
                 }
-        ) {
-            LazyColumnFor(items = list, modifier = Modifier.fillMaxHeight().background(color = Color.Black)) { alarm ->
-                // TODO Replace this with an index callback once its available.
-                val index = list.indexOf(alarm)
-                AlarmItem(modifier = Modifier.fillParentMaxWidth(), alarm)
             }
         }
     }
 }
 
+@ExperimentalMaterialApi
 @Composable
-fun AlarmItem(modifier: Modifier = Modifier, alarm: Alarm) {
-    Card(modifier = modifier.fillMaxWidth().padding(4.dp),
-            backgroundColor = if (alarm.hour < 12) colorSkyBlue else colorNightBlue
-    ){
+fun AlarmItem(
+    alarm: Alarm,
+    onClick: () -> Unit,
+    onUpdateAlarm: (Alarm) -> Unit,
+    scaffoldState: ScaffoldState
+) {
+    val context = AmbientContext.current
+    val scope = rememberCoroutineScope()
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(4.dp).clickable(onClick = onClick),
+        backgroundColor = if (alarm.hour < 12) colorSkyBlue else colorNightBlue
+    ) {
         Column {
             Row {
                 val timeColor = if (alarm.repeat) goldColor else Color.White
                 Text(
-                        modifier = Modifier.padding(4.dp).weight(3f),
-                        text = alarm.getFormatTime().toString(),
-                        fontSize = 40.sp,
-                        color = timeColor
+                    modifier = Modifier
+                        .padding(start = 24.dp, top = 8.dp, bottom = 8.dp)
+                        .weight(3f),
+                    text = alarm.getFormatTime().toString(),
+                    fontSize = 40.sp,
+                    color = timeColor
                 )
-                val checkedState = remember { mutableStateOf(false) }
-//                Switch(
-//                        modifier = Modifier.weight(1f).padding(4.dp).align(Alignment.CenterVertically),
-//                        checked = alarm.isOn,
-//                        onCheckedChange = {
-//                            alarm.isOn = !alarm.isOn
-////                            alarm.isOn = it
-//                            if (alarm.isOn) {
-//                                if (alarm.scheduleAlarm(ContextAmbient)) {
-//                                    Toast.makeText(
-//                                            alarm.context, alarm.getTimeLeftMessage(alarm.context),
-//                                            Toast.LENGTH_SHORT
-//                                    ).show()
-//                                } else {
-//                                    alarm.isOn = false
-////                                    binding.alarmSwitchButton.isChecked = false
-//                                }
-//                            } else {
-//                                alarm.cancelAlarm(alarm.context)
-//                            }
-//                            viewModel.onUpdate(item)
-//                        }
-//                )
+                val checkedState = remember { mutableStateOf(alarm.isOn) }
+                Switch(
+                    modifier = Modifier.weight(1f).padding(4.dp).align(Alignment.CenterVertically),
+                    checked = checkedState.value,
+                    onCheckedChange = {
+                        checkedState.value = it
+                        alarm.isOn = it
+                        if (alarm.isOn) {
+                            if (alarm.scheduleAlarm(context)) {
+                                scope.launch {
+                                    when (
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            message = alarm.getTimeLeftMessage(context)!!,
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    ) {
+                                        SnackbarResult.Dismissed ->
+                                            Log.d("Track", "Dismissed")
+                                        SnackbarResult.ActionPerformed ->
+                                            Log.d("Track", "Action!")
+                                    }
+                                }
+                            } else {
+                                alarm.isOn = false
+                                checkedState.value = false
+                            }
+                        } else {
+                            alarm.cancelAlarm(context)
+                        }
+                        onUpdateAlarm(alarm)
+                    }
+                )
             }
-            Row(modifier = Modifier.padding(bottom = 4.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+            Row(
+                modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 for (day in days.indices) {
-                    val textColor = if(alarm.repeatDays[day] == 'T') goldColor else Color.White
+                    val textColor = if (alarm.repeatDays[day] == 'T') goldColor else Color.White
                     Text(text = days[day], color = textColor)
                 }
             }
@@ -161,6 +187,14 @@ fun AlarmItem(modifier: Modifier = Modifier, alarm: Alarm) {
     }
 }
 
+@ExperimentalMaterialApi
+@Composable
+fun TimeLeftSnack(state: SnackbarHostState) {
+    SnackbarHost(
+        hostState = state,
+        snackbar = { data -> Snackbar(data) }
+    )
+}
 
 @Composable
 private fun ClearDialog(openDialog: MutableState<Boolean>) {

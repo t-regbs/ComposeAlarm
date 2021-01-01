@@ -17,11 +17,17 @@ fun Fragment.navigate(to: Screen, from: Screen, alarmId: Long? = null, isAdd: Bo
             findNavController().navigate(R.id.alarmFragment)
         }
         Screen.AlarmSettings -> {
-            findNavController().navigate(AlarmListFragmentDirections
-                .actionAlarmFragmentToAlarmSettingsFragment(alarmId!!, isAdd!!))
+            findNavController().navigate(
+                AlarmListFragmentDirections
+                    .actionAlarmFragmentToAlarmSettingsFragment(alarmId!!, isAdd!!)
+            )
         }
         Screen.AlarmMath -> {
 //            findNavController().navigate(R.id.sign_in_fragment)
         }
     }
+}
+
+fun Fragment.pop() {
+    findNavController().popBackStack()
 }
