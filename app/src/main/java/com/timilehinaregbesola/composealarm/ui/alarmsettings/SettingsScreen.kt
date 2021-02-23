@@ -40,6 +40,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 val days = listOf("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
+val fullDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
 @ExperimentalMaterialApi
 @Composable

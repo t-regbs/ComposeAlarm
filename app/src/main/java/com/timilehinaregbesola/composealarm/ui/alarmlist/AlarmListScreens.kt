@@ -17,18 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.AmbientContext
 import androidx.compose.ui.res.loadImageResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.timilehinaregbesola.composealarm.R
 import com.timilehinaregbesola.composealarm.database.Alarm
-import com.timilehinaregbesola.composealarm.ui.alarmsettings.days
-import com.timilehinaregbesola.composealarm.ui.colorNightBlue
-import com.timilehinaregbesola.composealarm.ui.colorSkyBlue
-import com.timilehinaregbesola.composealarm.ui.goldColor
+import com.timilehinaregbesola.composealarm.ui.alarmsettings.fullDays
 import com.timilehinaregbesola.composealarm.utils.*
 import kotlinx.coroutines.launch
+import java.util.*
 
 @Composable
 fun EmptyScreen(viewModel: AlarmListViewModel) {
@@ -41,29 +38,46 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
         ) {
             if (openDialog.value) ClearDialog(openDialog)
 
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .background(color = Color.White)
             ) {
-                val emptyImage = loadImageResource(id = R.drawable.icon_feather_image_1x)
+                val emptyImage = loadImageResource(id = R.drawable.search_icon)
+                val fabImage = loadImageResource(id = R.drawable.fabb)
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.75f)
+                        .fillMaxHeight()
+                        .align(Alignment.TopCenter)
                 ) {
-                    emptyImage.resource.resource?.let {
-                        Image(
-                            bitmap = it,
-                            modifier = Modifier
-                                .padding(top = 166.dp)
-                                .width(167.dp)
-                                .height(166.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 166.dp),
+                        contentAlignment = Alignment.Center
+
+                    ) {
+                        emptyImage.resource.resource?.let {
+                            Image(
+                                bitmap = it,
+                                modifier = Modifier
+                                    .width(167.dp)
+                                    .height(228.dp)
+                            )
+                        }
+                        emptyImage.resource.resource?.let {
+                            Image(
+                                bitmap = it,
+                                modifier = Modifier
+                                    .padding(top = 16.dp, end = 16.dp)
+                                    .width(167.dp)
+                                    .height(228.dp)
+                            )
+                        }
                     }
+
                     Text(
                         modifier = Modifier
                             .padding(top = 29.dp)
@@ -72,24 +86,17 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                         fontSize = 16.sp
                     )
                 }
-
-                Column(
+                FloatingActionButton(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.Bottom
+                        .padding(bottom = 16.dp, end = 40.dp)
+                        .width(72.dp)
+                        .height(75.dp)
+                        .align(Alignment.BottomEnd),
+                    onClick = { viewModel.onAdd() },
+                    backgroundColor = Color(0x482FF7)
                 ) {
-                    FloatingActionButton(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp)
-                            .width(56.dp)
-                            .height(56.dp)
-                            .align(Alignment.CenterHorizontally),
-                        onClick = { viewModel.onAdd() },
-                        backgroundColor = Color.Black,
-                        contentColor = Color.White
-                    ) {
-                        Icon(imageVector = Icons.Default.Add)
+                    fabImage.resource.resource?.let {
+                        Image(bitmap = it)
                     }
                 }
             }
@@ -134,22 +141,78 @@ fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
             snackbarHost = { state -> TimeLeftSnack(state) }
         ) {
             if (openDialog.value) ClearDialog(openDialog)
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = Color.Black)
+                    .background(color = Color.White)
             ) {
-                items(list) { alarm ->
-                    AlarmItem(
-                        alarm = alarm,
-                        onClick = { viewModel.onAlarmClicked(alarm.alarmId) },
-                        onUpdateAlarm = viewModel::onUpdate,
-                        scaffoldState = scaffoldState
-                    )
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                    ) {
+                        val enabled = list.any { it.isOn }
+                        val now = System.currentTimeMillis()
+                        var nearest = getCal(list [0]).timeInMillis
+                        var nearestIndex = 0
+                        list.forEachIndexed { index, alarm ->
+                            val cal = getCal(alarm)
+                            val time = cal.timeInMillis
+                            if ((time - now) < (nearest - now)) {
+                                nearest = time
+                                nearestIndex = index
+                            }
+                        }
+                        val nearestAlarmMessage = list[nearestIndex].getTimeLeft(nearest)
+                        Text(
+                            text = if (enabled) "Next alarm in $nearestAlarmMessage" else "No upcoming alarms",
+                            modifier = Modifier.padding(top = 24.dp, start = 24.dp, bottom = 8.dp),
+                            fontSize = 16.sp
+                        )
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            items(list) { alarm ->
+                                AlarmItem(
+                                    alarm = alarm,
+                                    onClick = { viewModel.onAlarmClicked(alarm.alarmId) },
+                                    onUpdateAlarm = viewModel::onUpdate,
+                                    scaffoldState = scaffoldState
+                                )
+                            }
+                        }
+                    }
+
+                    FloatingActionButton(
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .width(56.dp)
+                            .height(56.dp)
+                            .align(Alignment.BottomCenter),
+                        onClick = { viewModel.onAdd() },
+                        backgroundColor = Color.Black,
+                        contentColor = Color.White
+                    ) {
+                        Icon(imageVector = Icons.Default.Add)
+                    }
                 }
             }
         }
     }
+}
+
+private fun getCal(alarm: Alarm): Calendar {
+    val cal = Calendar.getInstance()
+    cal[Calendar.HOUR_OF_DAY] = alarm.hour
+    cal[Calendar.MINUTE] = alarm.minute
+    cal[Calendar.SECOND] = 0
+    return cal
 }
 
 @ExperimentalMaterialApi
@@ -162,25 +225,40 @@ fun AlarmItem(
 ) {
     val context = AmbientContext.current
     val scope = rememberCoroutineScope()
+    val bg = Color.LightGray.copy(alpha = 0.5f)
     Card(
         modifier = Modifier
-            .width(320.dp)
-            .height(126.dp)
-//            .padding(4.dp)
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(top = 16.dp, start = 24.dp, end = 24.dp)
             .clickable(onClick = onClick),
-        backgroundColor = if (alarm.hour < 12) colorSkyBlue else colorNightBlue
+        backgroundColor = bg,
+        elevation = 0.dp
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column {
             Row {
-                val timeColor = if (alarm.repeat) goldColor else Color.White
-                Text(
+                val time = alarm.getFormatTime().toString()
+                val actualTime = time.substring(0, time.length - 3)
+                val timeOfDay = time.substring(time.length - 2)
+                Row(
                     modifier = Modifier
                         .padding(start = 24.dp, top = 8.dp, bottom = 8.dp)
                         .weight(3f),
-                    text = alarm.getFormatTime().toString(),
-                    fontSize = 40.sp,
-                    color = timeColor
-                )
+                ) {
+                    Text(
+                        text = actualTime,
+                        fontSize = 40.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = timeOfDay,
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .align(Alignment.Bottom)
+                            .padding(bottom = 8.dp)
+                    )
+                }
                 val checkedState = remember { mutableStateOf(alarm.isOn) }
                 Switch(
                     modifier = Modifier
@@ -219,14 +297,26 @@ fun AlarmItem(
             }
             Row(
                 modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(bottom = 16.dp, top = 24.dp, start = 24.dp)
+                    .fillMaxWidth()
             ) {
-                for (day in days.indices) {
-                    val textColor = if (alarm.repeatDays[day] == 'T') goldColor else Color.White
-                    Text(text = days[day], color = textColor)
+                val sb = StringBuilder()
+                for (day in fullDays.indices) {
+                    if (alarm.repeatDays[day] == 'T') {
+                        sb.append("${fullDays[day]},")
+                    }
                 }
+                val alarmInfoText = sb.dropLast(1).toString()
+
+                val moreInfo = if (alarm.hour < 12) {
+                    "Good morning"
+                } else if (alarm.hour in 12..17) {
+                    "Afternoon"
+                } else {
+                    "Good Evening"
+                }
+
+                Text(text = "$alarmInfoText | $moreInfo", color = Color.Black, fontSize = 14.sp)
             }
         }
     }
@@ -270,4 +360,79 @@ private fun ClearDialog(openDialog: MutableState<Boolean>) {
 @Composable
 fun EmptyPreview() {
 //    EmptyScreen()
+}
+
+fun Alarm.getTimeLeft(time: Long): String? {
+    val message: String
+    val cal = getCal(alarm = this)
+    val today = getDayOfWeek(cal[Calendar.DAY_OF_WEEK])
+    var i: Int
+    var lastAlarmDay: Int
+    var nextAlarmDay: Int
+    if (System.currentTimeMillis() > time) {
+        nextAlarmDay = today + 1
+        lastAlarmDay = today
+        if (nextAlarmDay == 7) {
+            nextAlarmDay = 0
+        }
+    } else {
+        nextAlarmDay = today
+        lastAlarmDay = today - 1
+        if (lastAlarmDay == -1) {
+            lastAlarmDay = 6
+        }
+    }
+    i = nextAlarmDay
+    while (i != lastAlarmDay) {
+        if (i == 7) {
+            i = 0
+        }
+        if (repeatDays[i] == 'T') {
+            break
+        }
+        i++
+    }
+    if (i < today || i == today && cal.timeInMillis < System.currentTimeMillis()) {
+        val daysUntilAlarm: Int = SAT - today + 1 + i
+        cal.add(Calendar.DAY_OF_YEAR, daysUntilAlarm)
+    } else {
+        val daysUntilAlarm = i - today
+        cal.add(Calendar.DAY_OF_YEAR, daysUntilAlarm)
+    }
+    val alarmTime = cal.timeInMillis
+    val remainderTime = alarmTime - System.currentTimeMillis()
+    val minutes = (remainderTime / (1000 * 60) % 60).toInt()
+    val hours = (remainderTime / (1000 * 60 * 60) % 24).toInt()
+    val days = (remainderTime / (1000 * 60 * 60 * 24)).toInt()
+    val mString: String
+    val hString: String
+    val dString: String
+    mString = if (minutes == 1) {
+        "minute"
+    } else {
+        "minutes"
+    }
+    hString = if (hours == 1) {
+        "hour"
+    } else {
+        "hours"
+    }
+    dString = if (days == 1) {
+        "day"
+    } else {
+        "days"
+    }
+    message = if (days == 0) {
+        if (hours == 0) {
+            ("$minutes $mString")
+        } else {
+            ("$hours $hString $minutes $mString")
+        }
+    } else {
+        (
+            " " + days + " " + dString + " " + hours + " " + hString + " " + minutes + " " +
+                mString + " "
+            )
+    }
+    return message
 }
