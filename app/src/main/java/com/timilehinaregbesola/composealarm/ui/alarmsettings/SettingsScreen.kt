@@ -1,5 +1,7 @@
 package com.timilehinaregbesola.composealarm.ui.alarmsettings
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollableColumn
 import androidx.compose.foundation.layout.*
@@ -12,9 +14,11 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AmbientContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -27,26 +31,53 @@ import androidx.compose.ui.unit.sp
 import com.timilehinaregbesola.composealarm.R
 import com.timilehinaregbesola.composealarm.database.Alarm
 import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
+import com.timilehinaregbesola.composealarm.ui.alarmlist.TimeLeftSnack
+import com.timilehinaregbesola.composealarm.utils.cancelAlarm
 import com.timilehinaregbesola.composealarm.utils.getFormatTime
+import com.timilehinaregbesola.composealarm.utils.getTimeLeftMessage
+import com.timilehinaregbesola.composealarm.utils.scheduleAlarm
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 val days = listOf("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
 
+@ExperimentalMaterialApi
 @Composable
-fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel) {
+fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel, isFromAdd: Boolean?) {
+    val context = AmbientContext.current
+    val scaffoldState = rememberScaffoldState()
     Scaffold(
+        scaffoldState = scaffoldState,
+        snackbarHost = { state -> TimeLeftSnack(state) },
         topBar = {
             TopAppBar(
                 title = { Text("Alarm Settings") },
                 actions = {
+                    val scope = rememberCoroutineScope()
                     IconButton(
                         onClick = {
-//                                if (alarm.isOn) alarm.cancelAlarm
+                            if (alarm.isOn) alarm.cancelAlarm(context)
                             viewModel.onDeleteAlarm(alarm)
                         }
                     ) {
                         Icon(imageVector = Icons.Filled.Delete)
                     }
-                    IconButton(onClick = { }) {
+                    IconButton(
+                        onClick = {
+                            if (isFromAdd!!) {
+                                scheduleAndSnack(alarm, context, scope, scaffoldState)
+                                viewModel.onUpdate(alarm)
+                                viewModel.pop()
+                            } else {
+                                if (alarm.isOn) {
+                                    alarm.cancelAlarm(context)
+                                }
+                                scheduleAndSnack(alarm, context, scope, scaffoldState)
+                                viewModel.onUpdate(alarm)
+                                viewModel.pop()
+                            }
+                        }
+                    ) {
                         Icon(imageVector = Icons.Filled.Done)
                     }
                 }
@@ -127,6 +158,31 @@ fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel) {
                     .align(Alignment.CenterHorizontally)
             ) {
                 Text("Test Alarm")
+            }
+        }
+    }
+}
+
+@ExperimentalMaterialApi
+private fun scheduleAndSnack(
+    alarm: Alarm,
+    context: Context,
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState
+) {
+    alarm.isOn = alarm.scheduleAlarm(context)
+    if (alarm.isOn) {
+        scope.launch {
+            when (
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = alarm.getTimeLeftMessage(context)!!,
+                    duration = SnackbarDuration.Short
+                )
+            ) {
+                SnackbarResult.Dismissed ->
+                    Log.d("Track", "Dismissed")
+                SnackbarResult.ActionPerformed ->
+                    Log.d("Track", "Action!")
             }
         }
     }

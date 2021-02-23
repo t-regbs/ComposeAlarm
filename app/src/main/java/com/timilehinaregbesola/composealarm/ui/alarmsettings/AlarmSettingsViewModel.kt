@@ -54,6 +54,10 @@ class AlarmSettingsViewModel(private val repository: AlarmRepository) : ViewMode
         alarm.postValue(alarmFound)
     }
 
+    fun pop() {
+        popFrag.value = true
+    }
+
     private fun initializeCurrentAlarm() {
         viewModelScope.launch {
             _latestAlarm.value = repository.getLatestAlarmFromDatabase()

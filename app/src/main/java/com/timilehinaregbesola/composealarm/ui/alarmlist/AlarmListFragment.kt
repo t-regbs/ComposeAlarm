@@ -21,20 +21,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class AlarmListFragment : Fragment() {
     private val alarmListViewModel by viewModel<AlarmListViewModel>()
     private var add: Boolean? = null
-    override fun <I : Any?, O : Any?> prepareCall(
-        contract: ActivityResultContract<I, O>,
-        callback: ActivityResultCallback<O>
-    ): ActivityResultLauncher<I> {
-        TODO("Not yet implemented")
-    }
-
-    override fun <I : Any?, O : Any?> prepareCall(
-        contract: ActivityResultContract<I, O>,
-        registry: ActivityResultRegistry,
-        callback: ActivityResultCallback<O>
-    ): ActivityResultLauncher<I> {
-        TODO("Not yet implemented")
-    }
 
     @ExperimentalMaterialApi
     override fun onCreateView(

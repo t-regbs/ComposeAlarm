@@ -8,6 +8,7 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
@@ -24,21 +25,8 @@ class AlarmSettingsFragment : Fragment() {
     private val args: AlarmSettingsFragmentArgs by navArgs()
     private var key: Long? = null
     private var isFromAdd: Boolean? = null
-    override fun <I : Any?, O : Any?> prepareCall(
-        contract: ActivityResultContract<I, O>,
-        callback: ActivityResultCallback<O>
-    ): ActivityResultLauncher<I> {
-        TODO("Not yet implemented")
-    }
 
-    override fun <I : Any?, O : Any?> prepareCall(
-        contract: ActivityResultContract<I, O>,
-        registry: ActivityResultRegistry,
-        callback: ActivityResultCallback<O>
-    ): ActivityResultLauncher<I> {
-        TODO("Not yet implemented")
-    }
-
+    @ExperimentalMaterialApi
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -71,7 +59,7 @@ class AlarmSettingsFragment : Fragment() {
             setContent {
                 ComposeAlarmTheme {
                     alarmSettingsViewModel.alarm.observeAsState().value?.let { alarm ->
-                        SettingsScreen(alarm, alarmSettingsViewModel)
+                        SettingsScreen(alarm, alarmSettingsViewModel, isFromAdd)
                     }
                 }
             }

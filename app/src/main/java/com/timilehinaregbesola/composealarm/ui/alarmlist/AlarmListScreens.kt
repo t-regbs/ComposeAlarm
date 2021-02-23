@@ -10,12 +10,14 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.AmbientContext
 import androidx.compose.ui.res.loadImageResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,36 +36,61 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
-                ListTopAppBar(openDialog, viewModel)
+                ListTopAppBar(openDialog)
             }
         ) {
             if (openDialog.value) ClearDialog(openDialog)
 
             Column(
-                modifier = Modifier.fillMaxWidth().fillMaxHeight().background(color = Color.Black),
-                verticalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .background(color = Color.White)
             ) {
-                val androidImage = loadImageResource(id = R.drawable.ic_android)
-                val bubble = loadImageResource(id = R.drawable.ic_bubble)
-                val imgMessage = loadImageResource(id = R.drawable.ic_message)
+                val emptyImage = loadImageResource(id = R.drawable.icon_feather_image_1x)
 
-                imgMessage.resource.resource?.let {
-                    Image(
-                        bitmap = it,
-                        modifier = Modifier.width(200.dp).height(200.dp).align(Alignment.End)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.75f)
+                ) {
+                    emptyImage.resource.resource?.let {
+                        Image(
+                            bitmap = it,
+                            modifier = Modifier
+                                .padding(top = 166.dp)
+                                .width(167.dp)
+                                .height(166.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+                    Text(
+                        modifier = Modifier
+                            .padding(top = 29.dp)
+                            .align(Alignment.CenterHorizontally),
+                        text = "You haven't set any alarm",
+                        fontSize = 16.sp
                     )
                 }
-                bubble.resource.resource?.let {
-                    Image(
-                        bitmap = it,
-                        modifier = Modifier.width(200.dp).height(200.dp)
-                    )
-                }
-                androidImage.resource.resource?.let {
-                    Image(
-                        bitmap = it,
-                        modifier = Modifier.width(200.dp).height(200.dp).align(Alignment.End)
-                    )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    FloatingActionButton(
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .width(56.dp)
+                            .height(56.dp)
+                            .align(Alignment.CenterHorizontally),
+                        onClick = { viewModel.onAdd() },
+                        backgroundColor = Color.Black,
+                        contentColor = Color.White
+                    ) {
+                        Icon(imageVector = Icons.Default.Add)
+                    }
                 }
             }
         }
@@ -72,17 +99,22 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
 
 @Composable
 private fun ListTopAppBar(
-    openDialog: MutableState<Boolean>,
-    viewModel: AlarmListViewModel
+    openDialog: MutableState<Boolean>
 ) {
     TopAppBar(
-        title = { Text("Math Alarm") },
+        title = {
+            Text(
+                text = "Alarms",
+                fontSize = 16.sp
+            )
+        },
+        backgroundColor = Color.White,
         actions = {
             IconButton(onClick = { openDialog.value = true }) {
                 Icon(imageVector = Icons.Filled.List)
             }
-            IconButton(onClick = { viewModel.onAdd() }) {
-                Icon(imageVector = Icons.Filled.Add)
+            IconButton(onClick = { }) {
+                Icon(imageVector = Icons.Filled.MoreVert)
             }
         }
     )
@@ -97,12 +129,16 @@ fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
         Scaffold(
             scaffoldState = scaffoldState,
             topBar = {
-                ListTopAppBar(openDialog = openDialog, viewModel = viewModel)
+                ListTopAppBar(openDialog = openDialog)
             },
             snackbarHost = { state -> TimeLeftSnack(state) }
         ) {
             if (openDialog.value) ClearDialog(openDialog)
-            LazyColumn(modifier = Modifier.fillMaxHeight().background(color = Color.Black)) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = Color.Black)
+            ) {
                 items(list) { alarm ->
                     AlarmItem(
                         alarm = alarm,
@@ -127,10 +163,14 @@ fun AlarmItem(
     val context = AmbientContext.current
     val scope = rememberCoroutineScope()
     Card(
-        modifier = Modifier.fillMaxWidth().padding(4.dp).clickable(onClick = onClick),
+        modifier = Modifier
+            .width(320.dp)
+            .height(126.dp)
+//            .padding(4.dp)
+            .clickable(onClick = onClick),
         backgroundColor = if (alarm.hour < 12) colorSkyBlue else colorNightBlue
     ) {
-        Column {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row {
                 val timeColor = if (alarm.repeat) goldColor else Color.White
                 Text(
@@ -143,7 +183,10 @@ fun AlarmItem(
                 )
                 val checkedState = remember { mutableStateOf(alarm.isOn) }
                 Switch(
-                    modifier = Modifier.weight(1f).padding(4.dp).align(Alignment.CenterVertically),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .align(Alignment.CenterVertically),
                     checked = checkedState.value,
                     onCheckedChange = {
                         checkedState.value = it
@@ -175,7 +218,9 @@ fun AlarmItem(
                 )
             }
             Row(
-                modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(),
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 for (day in days.indices) {
