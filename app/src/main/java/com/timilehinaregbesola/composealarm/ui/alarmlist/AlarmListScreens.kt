@@ -9,9 +9,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -244,106 +243,154 @@ fun AlarmItem(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .padding(top = 16.dp, start = 24.dp, end = 24.dp)
-            .clickable(onClick = onClick),
+            .padding(top = 16.dp, start = 24.dp, end = 24.dp),
         elevation = 4.dp,
         shape = MaterialTheme.shapes.medium.copy(CornerSize(8.dp))
     ) {
         Column(modifier = Modifier.background(Color(0x99FFFFFF))) {
-            Row {
-                val time = alarm.getFormatTime().toString()
-                val actualTime = time.substring(0, time.length - 3)
-                val timeOfDay = time.substring(time.length - 2)
-                Row(
-                    modifier = Modifier
-                        .padding(start = 24.dp, top = 8.dp, bottom = 8.dp)
-                        .weight(3f),
-                ) {
-                    Text(
-                        text = actualTime,
-                        fontSize = 40.sp,
-                        color = Color.Black,
-                        fontWeight = if (alarm.isOn) FontWeight.Bold else FontWeight.Normal
-                    )
-                    Text(
-                        text = timeOfDay,
-                        fontSize = 16.sp,
-                        color = Color.Gray,
-                        fontWeight = if (alarm.isOn) FontWeight.Bold else FontWeight.Normal,
+            val expandItem = remember { mutableStateOf(false) }
+            Column(modifier = Modifier.clickable(onClick = onClick)) {
+                Row {
+                    val time = alarm.getFormatTime().toString()
+                    val actualTime = time.substring(0, time.length - 3)
+                    val timeOfDay = time.substring(time.length - 2)
+                    Row(
                         modifier = Modifier
-                            .align(Alignment.Bottom)
-                            .padding(bottom = 8.dp)
-                    )
-                }
-                val checkedState = remember { mutableStateOf(alarm.isOn) }
-                Switch(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp)
-                        .align(Alignment.CenterVertically),
-                    checked = checkedState.value,
-                    onCheckedChange = {
-                        checkedState.value = it
-                        alarm.isOn = it
-                        if (alarm.isOn) {
-                            if (alarm.scheduleAlarm(context)) {
-                                scope.launch {
-                                    when (
-                                        scaffoldState.snackbarHostState.showSnackbar(
-                                            message = alarm.getTimeLeftMessage(context)!!,
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    ) {
-                                        SnackbarResult.Dismissed ->
-                                            Log.d("Track", "Dismissed")
-                                        SnackbarResult.ActionPerformed ->
-                                            Log.d("Track", "Action!")
+                            .padding(start = 24.dp, top = 8.dp, bottom = 8.dp)
+                            .weight(3f),
+                    ) {
+                        Text(
+                            text = actualTime,
+                            fontSize = 40.sp,
+                            color = Color.Black,
+                            fontWeight = if (alarm.isOn) FontWeight.Bold else FontWeight.Normal
+                        )
+                        Text(
+                            text = timeOfDay,
+                            fontSize = 16.sp,
+                            color = Color.Gray,
+                            fontWeight = if (alarm.isOn) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier
+                                .align(Alignment.Bottom)
+                                .padding(bottom = 8.dp)
+                        )
+                    }
+                    val checkedState = remember { mutableStateOf(alarm.isOn) }
+                    Switch(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(4.dp)
+                            .align(Alignment.CenterVertically),
+                        checked = checkedState.value,
+                        onCheckedChange = {
+                            checkedState.value = it
+                            alarm.isOn = it
+                            if (alarm.isOn) {
+                                if (alarm.scheduleAlarm(context)) {
+                                    scope.launch {
+                                        when (
+                                            scaffoldState.snackbarHostState.showSnackbar(
+                                                message = alarm.getTimeLeftMessage(context)!!,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        ) {
+                                            SnackbarResult.Dismissed ->
+                                                Log.d("Track", "Dismissed")
+                                            SnackbarResult.ActionPerformed ->
+                                                Log.d("Track", "Action!")
+                                        }
                                     }
+                                } else {
+                                    alarm.isOn = false
+                                    checkedState.value = false
                                 }
                             } else {
-                                alarm.isOn = false
-                                checkedState.value = false
+                                alarm.cancelAlarm(context)
                             }
-                        } else {
-                            alarm.cancelAlarm(context)
+                            onUpdateAlarm(alarm)
                         }
-                        onUpdateAlarm(alarm)
-                    }
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .padding(bottom = 16.dp, top = 24.dp, start = 24.dp)
-                    .fillMaxWidth()
-            ) {
-                val sb = StringBuilder()
-                for (day in fullDays.indices) {
-                    if (alarm.repeatDays[day] == 'T') {
-                        sb.append("${fullDays[day]},")
-                    }
+                    )
                 }
-                val alarmInfoText = sb.dropLast(1).toString()
-
-                val moreInfo = if (alarm.hour < 12) {
-                    "Good morning"
-                } else if (alarm.hour in 12..17) {
-                    "Afternoon"
-                } else {
-                    "Good Evening"
-                }
-
-                Text(
-                    text = "$alarmInfoText | $moreInfo",
-                    color = Color.Black,
-                    fontSize = 14.sp,
-                    modifier = Modifier.weight(3f)
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .align(Alignment.CenterVertically)
+                        .padding(bottom = 16.dp, top = 24.dp, start = 24.dp)
+                        .fillMaxWidth()
+                ) {
+                    val sb = StringBuilder()
+                    for (day in fullDays.indices) {
+                        if (alarm.repeatDays[day] == 'T') {
+                            sb.append("${fullDays[day]},")
+                        }
+                    }
+                    val alarmInfoText = sb.dropLast(1).toString()
+
+                    val moreInfo = if (alarm.hour < 12) {
+                        "Good morning"
+                    } else if (alarm.hour in 12..17) {
+                        "Afternoon"
+                    } else {
+                        "Good Evening"
+                    }
+
+                    Text(
+                        text = "$alarmInfoText | $moreInfo",
+                        color = Color.Black,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(3f)
+                    )
+                    if (!expandItem.value) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            modifier = Modifier
+                                .weight(1f)
+                                .align(Alignment.CenterVertically)
+                                .clickable(onClick = { expandItem.value = true })
+                        )
+                    }
+                }
+            }
+            if (expandItem.value) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Divider(
+                    thickness = 3.dp,
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp)
                 )
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(modifier = Modifier.padding(start = 24.dp, bottom = 16.dp)) {
+                    Row(modifier = Modifier.weight(3f)) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .clickable(onClick = { })
+                        )
+                        Text(
+                            text = "Delete",
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(end = 24.dp)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .clickable(onClick = onClick)
+                        )
+                        Text(
+                            text = "Edit",
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .align(Alignment.CenterVertically)
+                            .clickable(onClick = { expandItem.value = false })
+                    )
+                }
             }
         }
     }
