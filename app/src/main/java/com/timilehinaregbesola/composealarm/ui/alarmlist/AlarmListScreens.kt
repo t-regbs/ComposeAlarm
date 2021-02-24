@@ -6,17 +6,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.AmbientContext
+import androidx.compose.ui.res.DeferredResource
 import androidx.compose.ui.res.loadImageResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,8 +59,9 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .padding(top = 166.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(top = 143.dp)
+                            .align(Alignment.CenterHorizontally),
+                        contentAlignment = Alignment.TopEnd
 
                     ) {
                         emptyImage.resource.resource?.let {
@@ -71,7 +76,7 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                             Image(
                                 bitmap = it,
                                 modifier = Modifier
-                                    .padding(top = 16.dp, end = 16.dp)
+                                    .padding(top = 24.dp, end = 40.dp)
                                     .width(167.dp)
                                     .height(228.dp)
                             )
@@ -82,24 +87,37 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                         modifier = Modifier
                             .padding(top = 29.dp)
                             .align(Alignment.CenterHorizontally),
-                        text = "You haven't set any alarm",
+                        text = "Nothing to see here",
                         fontSize = 16.sp
                     )
                 }
-                FloatingActionButton(
+                AddAlarmFab(
                     modifier = Modifier
                         .padding(bottom = 16.dp, end = 40.dp)
                         .width(72.dp)
                         .height(75.dp)
                         .align(Alignment.BottomEnd),
-                    onClick = { viewModel.onAdd() },
-                    backgroundColor = Color(0x482FF7)
-                ) {
-                    fabImage.resource.resource?.let {
-                        Image(bitmap = it)
-                    }
-                }
+                    viewModel,
+                    fabImage
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun AddAlarmFab(
+    modifier: Modifier = Modifier,
+    viewModel: AlarmListViewModel,
+    fabImage: DeferredResource<ImageBitmap>
+) {
+    FloatingActionButton(
+        modifier = modifier,
+        onClick = { viewModel.onAdd() },
+        backgroundColor = Color(0x482FF7)
+    ) {
+        fabImage.resource.resource?.let {
+            Image(bitmap = it)
         }
     }
 }
@@ -144,7 +162,7 @@ fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = Color.White)
+                    .background(color = Color.LightGray.copy(alpha = 0.1f))
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -188,19 +206,16 @@ fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
                             }
                         }
                     }
-
-                    FloatingActionButton(
+                    val fabImage = loadImageResource(id = R.drawable.fabb)
+                    AddAlarmFab(
                         modifier = Modifier
-                            .padding(bottom = 16.dp)
-                            .width(56.dp)
-                            .height(56.dp)
-                            .align(Alignment.BottomCenter),
-                        onClick = { viewModel.onAdd() },
-                        backgroundColor = Color.Black,
-                        contentColor = Color.White
-                    ) {
-                        Icon(imageVector = Icons.Default.Add)
-                    }
+                            .padding(bottom = 16.dp, end = 40.dp)
+                            .width(72.dp)
+                            .height(75.dp)
+                            .align(Alignment.BottomEnd),
+                        viewModel,
+                        fabImage
+                    )
                 }
             }
         }
@@ -225,17 +240,16 @@ fun AlarmItem(
 ) {
     val context = AmbientContext.current
     val scope = rememberCoroutineScope()
-    val bg = Color.LightGray.copy(alpha = 0.5f)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
             .padding(top = 16.dp, start = 24.dp, end = 24.dp)
             .clickable(onClick = onClick),
-        backgroundColor = bg,
-        elevation = 0.dp
+        elevation = 4.dp,
+        shape = MaterialTheme.shapes.medium.copy(CornerSize(8.dp))
     ) {
-        Column {
+        Column(modifier = Modifier.background(Color(0x99FFFFFF))) {
             Row {
                 val time = alarm.getFormatTime().toString()
                 val actualTime = time.substring(0, time.length - 3)
@@ -248,12 +262,14 @@ fun AlarmItem(
                     Text(
                         text = actualTime,
                         fontSize = 40.sp,
-                        color = Color.Black
+                        color = Color.Black,
+                        fontWeight = if (alarm.isOn) FontWeight.Bold else FontWeight.Normal
                     )
                     Text(
                         text = timeOfDay,
                         fontSize = 16.sp,
                         color = Color.Gray,
+                        fontWeight = if (alarm.isOn) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier
                             .align(Alignment.Bottom)
                             .padding(bottom = 8.dp)
@@ -316,7 +332,18 @@ fun AlarmItem(
                     "Good Evening"
                 }
 
-                Text(text = "$alarmInfoText | $moreInfo", color = Color.Black, fontSize = 14.sp)
+                Text(
+                    text = "$alarmInfoText | $moreInfo",
+                    color = Color.Black,
+                    fontSize = 14.sp,
+                    modifier = Modifier.weight(3f)
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    modifier = Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically)
+                )
             }
         }
     }
