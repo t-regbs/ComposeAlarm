@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -15,10 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.platform.AmbientContext
-import androidx.compose.ui.res.DeferredResource
-import androidx.compose.ui.res.loadImageResource
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,8 +47,8 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                     .fillMaxHeight()
                     .background(color = Color.White)
             ) {
-                val emptyImage = loadImageResource(id = R.drawable.search_icon)
-                val fabImage = loadImageResource(id = R.drawable.fabb)
+                val emptyImage = painterResource(id = R.drawable.search_icon)
+                val fabImage = painterResource(id = R.drawable.fabb)
 
                 Column(
                     modifier = Modifier
@@ -63,23 +63,21 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                         contentAlignment = Alignment.TopEnd
 
                     ) {
-                        emptyImage.resource.resource?.let {
-                            Image(
-                                bitmap = it,
-                                modifier = Modifier
-                                    .width(167.dp)
-                                    .height(228.dp)
-                            )
-                        }
-                        emptyImage.resource.resource?.let {
-                            Image(
-                                bitmap = it,
-                                modifier = Modifier
-                                    .padding(top = 24.dp, end = 40.dp)
-                                    .width(167.dp)
-                                    .height(228.dp)
-                            )
-                        }
+                        Image(
+                            painter = emptyImage,
+                            contentDescription = "Empty Alarm List",
+                            modifier = Modifier
+                                .width(167.dp)
+                                .height(228.dp)
+                        )
+                        Image(
+                            painter = emptyImage,
+                            contentDescription = "Empty Alarm List",
+                            modifier = Modifier
+                                .padding(top = 24.dp, end = 40.dp)
+                                .width(167.dp)
+                                .height(228.dp)
+                        )
                     }
 
                     Text(
@@ -108,16 +106,14 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
 private fun AddAlarmFab(
     modifier: Modifier = Modifier,
     viewModel: AlarmListViewModel,
-    fabImage: DeferredResource<ImageBitmap>
+    fabImage: Painter
 ) {
     FloatingActionButton(
         modifier = modifier,
         onClick = { viewModel.onAdd() },
         backgroundColor = Color(0x482FF7)
     ) {
-        fabImage.resource.resource?.let {
-            Image(bitmap = it)
-        }
+        Image(painter = fabImage, contentDescription = null)
     }
 }
 
@@ -135,10 +131,10 @@ private fun ListTopAppBar(
         backgroundColor = Color.White,
         actions = {
             IconButton(onClick = { openDialog.value = true }) {
-                Icon(imageVector = Icons.Filled.List)
+                Icon(imageVector = Icons.Filled.List, contentDescription = null)
             }
             IconButton(onClick = { }) {
-                Icon(imageVector = Icons.Filled.MoreVert)
+                Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "More")
             }
         }
     )
@@ -148,9 +144,32 @@ private fun ListTopAppBar(
 @Composable
 fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
     val openDialog = remember { mutableStateOf(false) }
-    val scaffoldState = rememberScaffoldState()
+    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scope = rememberCoroutineScope()
     Surface(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
+        BottomSheetScaffold(
+            sheetContent = {
+                Box(
+                    Modifier.fillMaxWidth().height(128.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Swipe up to expand sheet")
+                }
+                Column(
+                    Modifier.fillMaxWidth().padding(64.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Sheet content")
+                    Spacer(Modifier.height(20.dp))
+                    Button(
+                        onClick = {
+                            scope.launch { scaffoldState.bottomSheetState.collapse() }
+                        }
+                    ) {
+                        Text("Click to collapse sheet")
+                    }
+                }
+            },
             scaffoldState = scaffoldState,
             topBar = {
                 ListTopAppBar(openDialog = openDialog)
@@ -200,12 +219,13 @@ fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
                                     alarm = alarm,
                                     onClick = { viewModel.onAlarmClicked(alarm.alarmId) },
                                     onUpdateAlarm = viewModel::onUpdate,
-                                    scaffoldState = scaffoldState
+                                    scaffoldState = scaffoldState,
+                                    onDeleteAlarm = viewModel::onDelete
                                 )
                             }
                         }
                     }
-                    val fabImage = loadImageResource(id = R.drawable.fabb)
+                    val fabImage = painterResource(id = R.drawable.fabb)
                     AddAlarmFab(
                         modifier = Modifier
                             .padding(bottom = 16.dp, end = 40.dp)
@@ -235,9 +255,10 @@ fun AlarmItem(
     alarm: Alarm,
     onClick: () -> Unit,
     onUpdateAlarm: (Alarm) -> Unit,
-    scaffoldState: ScaffoldState
+    onDeleteAlarm: (Alarm) -> Unit,
+    scaffoldState: BottomSheetScaffoldState
 ) {
-    val context = AmbientContext.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     Card(
         modifier = Modifier
@@ -341,6 +362,7 @@ fun AlarmItem(
                     if (!expandItem.value) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Expand",
                             modifier = Modifier
                                 .weight(1f)
                                 .align(Alignment.CenterVertically)
@@ -361,9 +383,10 @@ fun AlarmItem(
                     Row(modifier = Modifier.weight(3f)) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Delete",
                             modifier = Modifier
                                 .padding(end = 4.dp)
-                                .clickable(onClick = { })
+                                .clickable(onClick = { onDeleteAlarm(alarm) })
                         )
                         Text(
                             text = "Delete",
@@ -373,6 +396,7 @@ fun AlarmItem(
                         )
                         Icon(
                             imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
                             modifier = Modifier
                                 .padding(end = 4.dp)
                                 .clickable(onClick = onClick)
@@ -385,6 +409,7 @@ fun AlarmItem(
                     }
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Collapse",
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically)

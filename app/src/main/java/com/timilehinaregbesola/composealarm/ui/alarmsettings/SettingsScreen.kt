@@ -2,11 +2,11 @@ package com.timilehinaregbesola.composealarm.ui.alarmsettings
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollableColumn
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -18,8 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AmbientContext
-import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.timilehinaregbesola.composealarm.R
 import com.timilehinaregbesola.composealarm.database.Alarm
 import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
 import com.timilehinaregbesola.composealarm.ui.alarmlist.TimeLeftSnack
@@ -45,7 +43,7 @@ val fullDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "F
 @ExperimentalMaterialApi
 @Composable
 fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel, isFromAdd: Boolean?) {
-    val context = AmbientContext.current
+    val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
@@ -61,7 +59,7 @@ fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel, isFromAdd: B
                             viewModel.onDeleteAlarm(alarm)
                         }
                     ) {
-                        Icon(imageVector = Icons.Filled.Delete)
+                        Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                     }
                     IconButton(
                         onClick = {
@@ -79,20 +77,28 @@ fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel, isFromAdd: B
                             }
                         }
                     ) {
-                        Icon(imageVector = Icons.Filled.Done)
+                        Icon(imageVector = Icons.Filled.Done, contentDescription = "Done")
                     }
                 }
             )
         }
     ) {
-        ScrollableColumn(modifier = Modifier.fillMaxHeight().fillMaxWidth().padding(8.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth()
+                .padding(8.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             Text(
                 modifier = Modifier.padding(top = 15.dp, bottom = 5.dp),
                 text = "SET ALARM TIME"
             )
             Divider(color = Color.Gray, thickness = 1.dp)
             Text(
-                modifier = Modifier.fillMaxWidth().padding(30.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(30.dp),
                 text = alarm.getFormatTime().toString(),
                 fontSize = 50.sp,
                 fontWeight = FontWeight.Bold,
@@ -128,7 +134,10 @@ fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel, isFromAdd: B
                 Text(modifier = Modifier.weight(3f), text = "Repeat Weekly", fontSize = 15.sp)
                 val checkedState = remember { mutableStateOf(false) }
                 Switch(
-                    modifier = Modifier.weight(1f).padding(4.dp).align(Alignment.CenterVertically),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .align(Alignment.CenterVertically),
                     checked = checkedState.value,
                     onCheckedChange = { checkedState.value = it }
                 )
@@ -145,7 +154,10 @@ fun SettingsScreen(alarm: Alarm, viewModel: AlarmSettingsViewModel, isFromAdd: B
                 Text(modifier = Modifier.weight(3f), text = "Vibrate", fontSize = 15.sp)
                 val checkedState = remember { mutableStateOf(false) }
                 Switch(
-                    modifier = Modifier.weight(1f).padding(4.dp).align(Alignment.CenterVertically),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .align(Alignment.CenterVertically),
                     checked = checkedState.value,
                     onCheckedChange = { checkedState.value = it }
                 )
@@ -191,14 +203,25 @@ private fun scheduleAndSnack(
 
 @Composable
 private fun SnoozeRow() {
-    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp, top = 10.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp, top = 10.dp)
+    ) {
         Text(
-            modifier = Modifier.align(Alignment.CenterVertically).weight(3f),
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .weight(3f),
             text = "Snooze (0 = OFF)",
             fontSize = 15.sp
         )
-        NumberTextInputComponent(modifier = Modifier.weight(1f))
-        Text(modifier = Modifier.align(Alignment.CenterVertically).weight(1f), text = "minute(s)")
+//        NumberTextInputComponent(modifier = Modifier.weight(1f))
+        Text(
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .weight(1f),
+            text = "minute(s)"
+        )
     }
 }
 
@@ -207,53 +230,45 @@ private fun RowWithDropdown(title: String) {
     Row(modifier = Modifier.padding(bottom = 10.dp, top = 10.dp)) {
         Text(modifier = Modifier.weight(3f), text = title, fontSize = 15.sp)
         val expanded = remember { mutableStateOf(false) }
-        val iconButton = @Composable {
+        Box(modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.TopStart)) {
             Button(
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
                 onClick = { expanded.value = true }
             ) {
                 Text("Press me")
             }
-        }
-        DropdownMenu(
-            toggleModifier = Modifier.padding(end = 4.dp),
-            expanded = expanded.value,
-            onDismissRequest = { expanded.value = false },
-            toggle = iconButton
-        ) {
-            DropdownMenuItem(onClick = { }) {
-                Text("Refresh")
-            }
-            DropdownMenuItem(onClick = { /* Handle settings! */ }) {
-                Text("Settings")
-            }
-            Divider()
-            DropdownMenuItem(onClick = { /* Handle send feedback! */ }) {
-                Text("Send Feedback")
+            DropdownMenu(
+                modifier = Modifier.padding(end = 4.dp),
+                expanded = expanded.value,
+                onDismissRequest = { expanded.value = false }
+            ) {
+                DropdownMenuItem(onClick = { }) {
+                    Text("Refresh")
+                }
+                DropdownMenuItem(onClick = { /* Handle settings! */ }) {
+                    Text("Settings")
+                }
+                Divider()
+                DropdownMenuItem(onClick = { /* Handle send feedback! */ }) {
+                    Text("Send Feedback")
+                }
             }
         }
     }
 }
 
-@Composable
-fun NumberTextInputComponent(modifier: Modifier = Modifier) {
-    val textValue = remember { mutableStateOf(TextFieldValue()) }
-    TextField(
-        value = textValue.value,
-        modifier = modifier.padding(end = 4.dp),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-        singleLine = true,
-        backgroundColor = Color.Transparent,
-        onValueChange = { textValue.value = it }
-    )
-}
-
-@Composable
-fun ImageButton(modifier: Modifier = Modifier) {
-    Button(onClick = {}, modifier = modifier) {
-        Image(bitmap = imageResource(R.drawable.ic_bubble))
-    }
-}
+//@Composable
+//fun NumberTextInputComponent(modifier: Modifier = Modifier) {
+//    val textValue = remember { mutableStateOf(TextFieldValue()) }
+//    TextField(
+//        value = textValue.value,
+//        onValueChange = {value: TextFieldValue ->  textValue.value = value },
+//        modifier = modifier.padding(end = 4.dp),
+//        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+//        singleLine = true,
+//        backgroundColor = Color.Transparent
+//    )
+//}
 
 @Preview(showBackground = true)
 @Composable
