@@ -1,11 +1,12 @@
 package com.timilehinaregbesola.composealarm.ui.alarmlist
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.timilehinaregbesola.composealarm.database.Alarm
-import com.timilehinaregbesola.composealarm.utils.Event
 import com.timilehinaregbesola.composealarm.utils.getDayOfWeek
 import com.timilehinaregbesola.mathalarm.database.AlarmRepository
 import kotlinx.coroutines.launch
@@ -17,9 +18,11 @@ class AlarmListViewModel(private val repository: AlarmRepository) : ViewModel() 
     val alarms: LiveData<List<Alarm>>
         get() = _alarms
 
-    private val _navigateToAlarmSettings = MutableLiveData<Event<Long>>()
-    val navigateToAlarmSettings: LiveData<Event<Long>>
+    private val _navigateToAlarmSettings = MutableLiveData<Long>()
+    val navigateToAlarmSettings: LiveData<Long>
         get() = _navigateToAlarmSettings
+
+    val alarm: MutableState<Alarm?> = mutableStateOf(null)
 //    init {
 //        getAlarms()
 //    }
@@ -29,6 +32,11 @@ class AlarmListViewModel(private val repository: AlarmRepository) : ViewModel() 
             repository.update(alarm)
             getAlarms()
         }
+    }
+
+    fun getAlarm(key: Long) = viewModelScope.launch {
+        val alarmFound = repository.findAlarm(key)
+        alarm.value = alarmFound
     }
 
     fun getAlarms() {
@@ -50,7 +58,7 @@ class AlarmListViewModel(private val repository: AlarmRepository) : ViewModel() 
         viewModelScope.launch {
             val id = repository.add(new)
             addClicked.value = true
-            _navigateToAlarmSettings.value = Event(id)
+            _navigateToAlarmSettings.value = id
         }
     }
 
@@ -78,7 +86,7 @@ class AlarmListViewModel(private val repository: AlarmRepository) : ViewModel() 
 
     fun onAlarmClicked(id: Long) {
         addClicked.value = false
-        _navigateToAlarmSettings.value = Event(id)
+        _navigateToAlarmSettings.value = id
     }
 
     fun onAlarmSettingsNavigated() {

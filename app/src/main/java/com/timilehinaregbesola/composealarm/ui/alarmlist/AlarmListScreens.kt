@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,11 +31,16 @@ import com.timilehinaregbesola.composealarm.utils.*
 import kotlinx.coroutines.launch
 import java.util.*
 
+@ExperimentalMaterialApi
 @Composable
 fun EmptyScreen(viewModel: AlarmListViewModel) {
     val openDialog = remember { mutableStateOf(false) }
+    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scope = rememberCoroutineScope()
     Surface(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
+        BottomSheetScaffold(
+            sheetContent = {},
+            sheetPeekHeight = 0.dp,
             topBar = {
                 ListTopAppBar(openDialog)
             }
@@ -89,31 +95,41 @@ fun EmptyScreen(viewModel: AlarmListViewModel) {
                     )
                 }
                 AddAlarmFab(
-                    modifier = Modifier
-                        .padding(bottom = 16.dp, end = 40.dp)
-                        .width(72.dp)
-                        .height(75.dp)
-                        .align(Alignment.BottomEnd),
-                    viewModel,
-                    fabImage
+                    viewModel = viewModel,
+                    fabImage = fabImage,
+                    scaffoldState = scaffoldState
                 )
             }
         }
     }
 }
 
+@ExperimentalMaterialApi
 @Composable
 private fun AddAlarmFab(
     modifier: Modifier = Modifier,
     viewModel: AlarmListViewModel,
-    fabImage: Painter
+    fabImage: Painter,
+    scaffoldState: BottomSheetScaffoldState
 ) {
+    val scope = rememberCoroutineScope()
     FloatingActionButton(
         modifier = modifier,
-        onClick = { viewModel.onAdd() },
-        backgroundColor = Color(0x482FF7)
+        onClick = {
+//            viewModel.onAdd()
+            scope.launch {
+                scaffoldState.bottomSheetState.expand()
+            }
+        },
+        backgroundColor = Color(0x482FF7),
     ) {
-        Image(painter = fabImage, contentDescription = null)
+        Image(
+            modifier = Modifier
+                .width(72.dp)
+                .height(75.dp),
+            painter = fabImage,
+            contentDescription = null
+        )
     }
 }
 
@@ -142,34 +158,47 @@ private fun ListTopAppBar(
 
 @ExperimentalMaterialApi
 @Composable
-fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
+fun ListDisplayScreen(
+    list: List<Alarm>,
+    viewModel: AlarmListViewModel,
+    alarmId: Long?,
+    fromAdd: Boolean,
+    activeAlarm: Alarm?
+) {
     val openDialog = remember { mutableStateOf(false) }
     val scaffoldState = rememberBottomSheetScaffoldState()
+
     val scope = rememberCoroutineScope()
     Surface(modifier = Modifier.fillMaxSize()) {
         BottomSheetScaffold(
             sheetContent = {
-                Box(
-                    Modifier.fillMaxWidth().height(128.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Swipe up to expand sheet")
-                }
                 Column(
-                    Modifier.fillMaxWidth().padding(64.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
                 ) {
-                    Text("Sheet content")
-                    Spacer(Modifier.height(20.dp))
-                    Button(
-                        onClick = {
-                            scope.launch { scaffoldState.bottomSheetState.collapse() }
-                        }
+                    Card(
+                        modifier = Modifier
+                            .padding(start = 24.dp, end = 24.dp)
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        backgroundColor = Color(0xF7F8F8),
+                        elevation = 0.dp,
+                        shape = MaterialTheme.shapes.medium.copy(CornerSize(16.dp))
                     ) {
-                        Text("Click to collapse sheet")
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(30.dp),
+                            text = if (fromAdd) activeAlarm?.getFormatTime().toString() else "Dummy AM",
+                            fontSize = 50.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             },
+            sheetPeekHeight = 0.dp,
             scaffoldState = scaffoldState,
             topBar = {
                 ListTopAppBar(openDialog = openDialog)
@@ -228,12 +257,11 @@ fun ListDisplayScreen(list: List<Alarm>, viewModel: AlarmListViewModel) {
                     val fabImage = painterResource(id = R.drawable.fabb)
                     AddAlarmFab(
                         modifier = Modifier
-                            .padding(bottom = 16.dp, end = 40.dp)
-                            .width(72.dp)
-                            .height(75.dp)
+                            .padding(bottom = 16.dp, end = 32.dp)
                             .align(Alignment.BottomEnd),
                         viewModel,
-                        fabImage
+                        fabImage,
+                        scaffoldState
                     )
                 }
             }
