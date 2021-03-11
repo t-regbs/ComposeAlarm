@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -20,9 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,15 +26,9 @@ import androidx.compose.ui.unit.sp
 import com.timilehinaregbesola.composealarm.database.Alarm
 import com.timilehinaregbesola.composealarm.ui.ComposeAlarmTheme
 import com.timilehinaregbesola.composealarm.ui.alarmlist.TimeLeftSnack
-import com.timilehinaregbesola.composealarm.utils.cancelAlarm
-import com.timilehinaregbesola.composealarm.utils.getFormatTime
-import com.timilehinaregbesola.composealarm.utils.getTimeLeftMessage
-import com.timilehinaregbesola.composealarm.utils.scheduleAlarm
+import com.timilehinaregbesola.composealarm.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
-val days = listOf("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
-val fullDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
 @ExperimentalMaterialApi
 @Composable
@@ -257,8 +247,8 @@ private fun RowWithDropdown(title: String) {
     }
 }
 
-//@Composable
-//fun NumberTextInputComponent(modifier: Modifier = Modifier) {
+// @Composable
+// fun NumberTextInputComponent(modifier: Modifier = Modifier) {
 //    val textValue = remember { mutableStateOf(TextFieldValue()) }
 //    TextField(
 //        value = textValue.value,
@@ -268,7 +258,7 @@ private fun RowWithDropdown(title: String) {
 //        singleLine = true,
 //        backgroundColor = Color.Transparent
 //    )
-//}
+// }
 
 @Preview(showBackground = true)
 @Composable

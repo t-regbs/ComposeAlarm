@@ -23,6 +23,9 @@ const val EASY = 0
 const val MEDIUM = 1
 const val HARD = 2
 
+val days = listOf("S", "M", "T", "W", "T", "F", "S")
+val fullDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
 const val ALARM_EXTRA = "alarm_extra"
 
 // Get the formatted time (example: 12:00 AM)

@@ -7,11 +7,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.timilehinaregbesola.composealarm.R
 import com.timilehinaregbesola.composealarm.database.Alarm
-import com.timilehinaregbesola.composealarm.ui.alarmsettings.fullDays
+import com.timilehinaregbesola.composealarm.ui.teall
+import com.timilehinaregbesola.composealarm.ui.unSelectedDay
 import com.timilehinaregbesola.composealarm.utils.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -174,31 +179,171 @@ fun ListDisplayScreen(
             sheetContent = {
                 Column(
                     Modifier
+                        .background(color = Color.White)
                         .fillMaxWidth()
-                        .fillMaxHeight()
+                        .padding(24.dp)
                 ) {
                     Card(
                         modifier = Modifier
-                            .padding(start = 24.dp, end = 24.dp)
                             .fillMaxWidth()
-                            .height(150.dp),
-                        backgroundColor = Color(0xF7F8F8),
+                            .height(150.dp)
+                            .padding(horizontal = 16.dp),
+                        backgroundColor = unSelectedDay,
                         elevation = 0.dp,
-                        shape = MaterialTheme.shapes.medium.copy(CornerSize(16.dp))
+                        shape = MaterialTheme.shapes.medium.copy(CornerSize(24.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(30.dp),
+                                text = if (fromAdd) activeAlarm?.getFormatTime().toString() else "Dummy AM",
+                                fontSize = 50.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        for (day in days) {
+                            val checkedState = remember { mutableStateOf(false) }
+                            RingDayChip(
+                                day = day,
+                                selected = checkedState.value,
+                                onSelectChange = { checkedState.value = it }
+                            )
+                        }
+                    }
+                    Divider(
+                        modifier = Modifier
+                            .padding(top = 17.dp, start = 16.dp, end = 16.dp),
+                        thickness = 10.dp,
+                        color = unSelectedDay
+                    )
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 38.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Row(modifier = Modifier.padding(end = 38.dp)) {
+                            val repeatWeekCheckboxState = remember { mutableStateOf(true) }
+                            Checkbox(
+                                modifier = Modifier.padding(end = 14.dp),
+                                checked = repeatWeekCheckboxState.value,
+                                onCheckedChange = { repeatWeekCheckboxState.value = it }
+                            )
+                            Text(
+                                text = "Repeat Weekly",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                        Row {
+                            val vibrateCheckboxState = remember { mutableStateOf(true) }
+                            Checkbox(
+                                modifier = Modifier.padding(end = 14.dp),
+                                checked = vibrateCheckboxState.value,
+                                onCheckedChange = { vibrateCheckboxState.value = it }
+                            )
+                            Text(
+                                text = "Vibrate",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 30.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(
+                            modifier = Modifier.padding(end = 14.dp),
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = null
+                        )
+                        Text(
+                            text = "Good Morning",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 30.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(
+                            modifier = Modifier.padding(end = 14.dp),
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = null
+                        )
+                        Text(
+                            text = "Alarm Tone (Default)",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 30.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(
+                            modifier = Modifier.padding(end = 14.dp),
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = null
+                        )
+                        Text(
+                            text = "Easy Math",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                    Button(
+                        modifier = Modifier
+                            .padding(top = 32.dp)
+                            .fillMaxWidth(),
+                        onClick = { /*TODO*/ },
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = unSelectedDay,
+                            contentColor = Color.Black
+                        )
                     ) {
                         Text(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(30.dp),
-                            text = if (fromAdd) activeAlarm?.getFormatTime().toString() else "Dummy AM",
-                            fontSize = 50.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+                            fontSize = 14.sp,
+                            text = "TEST ALARM"
+                        )
+                    }
+                    Button(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .fillMaxWidth(),
+                        onClick = {
+                            scope.launch {
+                                scaffoldState.bottomSheetState.collapse()
+                            }
+                        }
+                    ) {
+                        Text(
+                            fontSize = 14.sp,
+                            text = "SAVE"
                         )
                     }
                 }
             },
             sheetPeekHeight = 0.dp,
+            sheetShape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
             scaffoldState = scaffoldState,
             topBar = {
                 ListTopAppBar(openDialog = openDialog)
@@ -275,6 +420,41 @@ private fun getCal(alarm: Alarm): Calendar {
     cal[Calendar.MINUTE] = alarm.minute
     cal[Calendar.SECOND] = 0
     return cal
+}
+
+@Composable
+fun RingDayChip(
+    day: String,
+    selected: Boolean = false,
+    onSelectChange: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .size(36.dp)
+            .toggleable(
+                value = selected,
+                onValueChange = onSelectChange
+            ),
+        elevation = 0.dp,
+        shape = CircleShape,
+        color = if (selected) {
+            teall
+        } else {
+            unSelectedDay
+        }
+    ) {
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = day,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = if (selected) Color.White else Color.Black,
+//                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+            )
+        }
+    }
 }
 
 @ExperimentalMaterialApi

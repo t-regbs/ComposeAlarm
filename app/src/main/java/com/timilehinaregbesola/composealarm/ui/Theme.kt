@@ -8,16 +8,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorPalette = darkColors(
-        primary = purple200,
-        primaryVariant = purple700,
-        secondary = teal200,
-        surface = Color.Black
+    primary = purple200,
+    primaryVariant = purple700,
+    secondary = teall,
+    surface = Color.Black
 )
 
 private val LightColorPalette = lightColors(
-        primary = purple500,
-        primaryVariant = purple700,
-        secondary = teal200
+    primary = purple500,
+    primaryVariant = purple700,
+    secondary = teall
 
         /* Other default colors to override
     background = Color.White,
@@ -38,9 +38,9 @@ fun ComposeAlarmTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Comp
     }
 
     MaterialTheme(
-            colors = colors,
-            typography = typography,
-            shapes = shapes,
-            content = content
+        colors = colors,
+        typography = typography,
+        shapes = shapes,
+        content = content
     )
 }
